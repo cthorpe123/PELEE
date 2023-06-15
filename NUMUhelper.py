@@ -335,6 +335,17 @@ def make_filename(VARIABLE, date_time, tag, detsys=None):
 
 #scale factors for several runs/samples
 def get_scaling(RUN, bnb_type, mc_type, scaling=1):
+    # C Thorpe: Adding run 4
+    if RUN == 4:
+        pot = 1e20
+        print('here')
+        weights = {
+        "data": 1 * scaling,
+        "mc": 0.118 * scaling,
+        "nue": 0.118 * scaling,
+        "ext": 0.520 * scaling,
+        }           
+    
     if RUN == 3:
         if bnb_type == 'G1':
             weights = {
@@ -581,6 +592,7 @@ def apply_mask(df, sample_name, mask, DETSYS, select_longest=False, extra_vars=N
     [temp.append(str(x)) for x in common_vars if x not in temp] #remove redundancy
     common_vars = temp
     for var in common_vars:
+        print(var)
         #apply mask to each variable
         df[var] = df[var].apply(lambda x: np.where(x==0,0.123,x))
         VAR = (df[var]*mask).apply(lambda x: x[x != False])
@@ -632,15 +644,19 @@ def apply_mask(df, sample_name, mask, DETSYS, select_longest=False, extra_vars=N
     return df_filtered
 
 def apply_muon_fullsel(DF, sample_name, USECRT, DETSYS, VARS=None):
+    print('Sample Name ' + sample_name)
     '''
     Returns dataframe will all cuts applied and longest track preselected
     '''
     query, track_cuts = get_NUMU_sel(USECRT, opfilter=False)
+    print('Make Query')
     df_filtered = make_and_apply_mask(DF, query, track_cuts, sample_name, DETSYS, select_longest=True, VARS=VARS)
+    print('Done filtering')
     return df_filtered
 
 def make_and_apply_mask(DF, query, track_cuts, sample_name, DETSYS, select_longest=False, VARS=None):
     df, mask = make_mask(DF, query, track_cuts)
+    print('In make_and_apply_mask')
     # need to protect the null values of certain variables
     try:
         if sample_name in ['mc','dirt','nue']: df['backtracked_pdg_v'] = df['backtracked_pdg_v'].apply(lambda x: [xx + 0.01 for xx in x])

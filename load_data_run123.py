@@ -1026,6 +1026,8 @@ def process_uproot_ccncpi0vars(up,df):
     
 def get_variables():
 
+    print('Getting Variables!')
+    
     VARDICT = {}
     
     VARIABLES = [
@@ -1129,6 +1131,7 @@ def get_variables():
     ]
 
     VARDICT['NUEVARS'] = NUEVARS
+ 
     
     NUMUVARS = []
 
@@ -1351,9 +1354,12 @@ def load_data_run123(which_sideband='pi0', return_plotter=True,
         ur2data_pi0_sidebands = uproot.open(ls.ntuple_path+'farsidebands/'+R2_PI0_SIDEBAND_BNB+".root")['nuselection'][tree]
         ur3data_pi0_sidebands = uproot.open(ls.ntuple_path+'farsidebands/'+R3_PI0_SIDEBAND_BNB+".root")['nuselection'][tree]
     if(which_sideband == "fulldata"):
-        ur1data_fulldata = uproot.open(ls.ntuple_path+R1_FULLDATA+".root")['nuselection'][tree]
-        ur2data_fulldata = uproot.open(ls.ntuple_path+R2_FULLDATA+".root")['nuselection'][tree]
-        ur3data_fulldata = uproot.open(ls.ntuple_path+R3_FULLDATA+".root")['nuselection'][tree]
+        #ur1data_fulldata = uproot.open(ls.ntuple_path+R1_FULLDATA+".root")['nuselection'][tree]
+        #ur2data_fulldata = uproot.open(ls.ntuple_path+R2_FULLDATA+".root")['nuselection'][tree]
+        #ur3data_fulldata = uproot.open(ls.ntuple_path+R3_FULLDATA+".root")['nuselection'][tree]
+        ur1data_fulldata = uproot.open(ls.ntuple_path+ls.RUN1+R1_FULLDATA+".root")['nuselection'][tree]
+        ur2data_fulldata = uproot.open(ls.ntuple_path+ls.RUN2+R2_FULLDATA+".root")['nuselection'][tree]
+        ur3data_fulldata = uproot.open(ls.ntuple_path+ls.RUN3+R3_FULLDATA+".root")['nuselection'][tree]
         
     if ( (loadshowervariables == False) and (loadnumuntuples == True)):
         R123_NUMU_SIDEBAND_BNB = 'neutrinoselection_filt_numu_ALL'
@@ -1402,6 +1408,7 @@ def load_data_run123(which_sideband='pi0', return_plotter=True,
                  "trk2shrhitdist2","trk1trk2hitdist2","shr1shr2moliereavg","shr1trk1moliereavg","shr1trk2moliereavg",
                  "trk2_id","shr2_id","trk_hits_2nd","shr_hits_2nd"
     ]
+    
     PI0VARS = ["pi0_radlen1","pi0_radlen2","pi0_dot1","pi0_dot2","pi0_energy1_Y","pi0_energy2_Y",
                "pi0_dedx1_fit_Y","pi0_dedx2_fit_Y","pi0_shrscore1","pi0_shrscore2","pi0_gammadot",
                "pi0_dedx1_fit_V","pi0_dedx2_fit_V","pi0_dedx1_fit_U","pi0_dedx2_fit_U",
