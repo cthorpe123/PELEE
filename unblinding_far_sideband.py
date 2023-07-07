@@ -262,7 +262,7 @@ BLIND = '(bnbdata == 0)'
 
 
 
-# pi0 selection
+# pi0 selection -  Table 5 of PeLEE technote
 SCORECUT = 0.5 # 0.75 #75 # max track score
 DVTX = 3.0 # 3. # distance from vertex of each shower
 VTXDOT = 0.8 # dot product between each shower's direction and the vtx -> shr start vector
@@ -372,6 +372,7 @@ selection_categories = {
     'NPL': {'query': NPLCUTQ, 'title': '1eNp Loose cuts', 'dir': 'NPL'},
     'NPT': {'query': NPTCUTQ, 'title': '1eNp Tight cuts', 'dir': 'NPT'},
     'NPALTEST': {'query': NPALTESTQ, 'title': '1eNp Test cuts', 'dir': 'NPALTEST'},
+     # Selection that was ued in the final unblinding by the looks of it! (eg. fig 11a of https://inspirehep.net/literature/1954070)
     'NPBDT': {'query': BDTCQ, 'title': '1eNp BDT sel.', 'dir': 'NPBDT'},
     'NPBDTOnly': {'query': BDTCQ_only, 'title': '1eNp BDT sel. (no Loose)', 'dir': 'NPBDTOnly'},
     'TESTINTBDTCQ2': {'query': TESTINTBDTCQ2, 'title': '1eNp VL + BDT [0.3,0.6]', 'dir': 'TESTINTBDTCQ2'},

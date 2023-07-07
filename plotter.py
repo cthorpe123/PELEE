@@ -808,7 +808,7 @@ class Plotter:
 
         return category, plotted_variable
 
-    def _categorize_entries_paper(self, sample, variable, query="selected==1", extra_cut=None, track_cuts=None, select_longest=True):
+    def _categorize_entries_paper(self, sample, variable,query="selected==1", extra_cut=None, track_cuts=None, select_longest=True):
         category = self._selection(
             "paper_category", sample, query=query, extra_cut=extra_cut, track_cuts=track_cuts, select_longest=select_longest)
         plotted_variable = self._selection(
@@ -1385,6 +1385,11 @@ class Plotter:
 
         """
 
+        print("Starting plot_variable")
+
+        if draw_data == True:
+          print("Drawing data")
+
         self.detsys = {}
 
         if not title:
@@ -1437,26 +1442,27 @@ class Plotter:
         category, mc_plotted_variable = categorization(
             self.samples["mc"], variable, query=query, extra_cut=self.nu_pdg, track_cuts=track_cuts, select_longest=select_longest)
 
-
         var_dict = defaultdict(list)
         weight_dict = defaultdict(list)
         mc_genie_weights = self._get_genie_weight(
             self.samples["mc"], variable, query=query, extra_cut=self.nu_pdg, track_cuts=track_cuts,select_longest=select_longest, weightvar=genieweight)
 
-        for c, v, w in zip(category, mc_plotted_variable, mc_genie_weights):
+        for c, v, w in zip(category, mc_plotted_variable, mc_genie_weights):           
             var_dict[c].append(v)
             weight_dict[c].append(self.weights["mc"] * w)
 
         nue_genie_weights = self._get_genie_weight(
             self.samples["nue"], variable, query=query, track_cuts=track_cuts, select_longest=select_longest, weightvar=genieweight)
 
+
         category, nue_plotted_variable = categorization(
             self.samples["nue"], variable, query=query, track_cuts=track_cuts, select_longest=select_longest)
 
+
+        # The 21 appears somewhere in here #
         for c, v, w in zip(category, nue_plotted_variable, nue_genie_weights):
             var_dict[c].append(v)
             weight_dict[c].append(self.weights["nue"] * w)
-
         if "ncpi0" in self.samples:
             ncpi0_genie_weights = self._get_genie_weight(
                     self.samples["ncpi0"], variable, query=query, track_cuts=track_cuts, select_longest=select_longest, weightvar=genieweight)
@@ -1567,6 +1573,7 @@ class Plotter:
             variable, self.samples["data"], query=query, track_cuts=track_cuts, select_longest=select_longest)
             data_plotted_variable = self._select_showers(data_plotted_variable, variable,
                                                      self.samples["data"], query=query)
+            print(type(data_plotted_variable))
             #### for paper add EXT to the stacked plot
             if (kind == "paper_category" or kind == "paper_category_xsec" or kind == "paper_category_numu"):
                 var_dict[100] = ext_plotted_variable
@@ -1640,6 +1647,7 @@ class Plotter:
             #put the numu stuff on top
             hasprotons = 23 in var_dict.keys()
             keys = list(var_dict.keys())
+            
             if hasprotons:
                 keys.remove(22)#take them out
                 keys.remove(23)
@@ -1651,6 +1659,7 @@ class Plotter:
                 keys.append(25)
 
             for c in keys:
+                print(c)
                 order_var_dict[c] = var_dict[c]
                 order_weight_dict[c] = weight_dict[c]
         else:
@@ -1733,7 +1742,7 @@ class Plotter:
             total_weight = np.concatenate([total_weight, ext_weight])
 
         #### for paper draw lee as dashed line on top of stack plot
-        '''
+        # C Thorpe: I tried uncommenting this
         if kind == "paper_category":
             lee_tot_array = np.concatenate([total_array,var_dict[111]])
             lee_tot_weight = np.concatenate([total_weight,weight_dict[111]])
@@ -1746,7 +1755,6 @@ class Plotter:
                 linewidth=2,
                 label="eLEE: %.1f" % sum(weight_dict[111]) if sum(weight_dict[111]) else "",
                 **plot_options)
-        '''
 
         n_tot, bin_edges, patches = ax1.hist(
         total_array,
@@ -2029,6 +2037,7 @@ class Plotter:
         '''
 
         self.prediction = n_tot
+        n_data = []
         if draw_data:
             n_data, bins = np.histogram(data_plotted_variable, **plot_options)
             self.data = n_data
@@ -2036,11 +2045,15 @@ class Plotter:
 
             self.cov_data_stat[np.diag_indices_from(self.cov_data_stat)] = n_data
 
-        self.cov_data_stat[np.diag_indices_from(self.cov_data_stat)] = n_data
+        # C Thorpe: commented this out
+        #self.cov_data_stat[np.diag_indices_from(self.cov_data_stat)] = n_data
 
-        if (predictedevents==True):
+        print("predictedevents=",predictedevents)
+
+        if draw_data:
+          if (predictedevents==True):
             datalabel = "BNB Data: %i" % len(data_plotted_variable)
-        else:
+          else:
             datalabel = "BNB Data"
             
 
@@ -2060,26 +2073,30 @@ class Plotter:
 
             #chisq = self._chisquare(n_data, n_tot, exp_err)
             #self.stats['chisq'] = chisq
-            chisqCNP = self._chisq_CNP(n_data,n_tot)
-            #self.stats['chisqCNP'] = chisqCNP
-            #print ('chisq for data/mc agreement with diagonal terms only : %.02f'%(chisq))
-            #print ('chisq for data/mc agreement with diagonal terms only : %.02f'%(self._chisquare(n_data, n_tot, np.sqrt(np.diag(cov)))))
-            chistatonly, aab, aac = self._chisq_full_covariance(n_data,n_tot,CNP=True,STATONLY=True)
-            #chiarea, aab, aac = self._chisq_full_covariance(n_tot-lee_hist,n_tot,CNP=True,STATONLY=True,AREANORMED=True)
-            chicov, chinocov,dof = self._chisq_full_covariance(n_data,n_tot,CNP=True)#,USEFULLCOV=True)
+            # C Thorpe: Put all this in an if statement to handle situation in which there is no data drawn
+            if(draw_data):
+              chisqCNP = self._chisq_CNP(n_data,n_tot)
+              #self.stats['chisqCNP'] = chisqCNP
+              #print ('chisq for data/mc agreement with diagonal terms only : %.02f'%(chisq))
+              #print ('chisq for data/mc agreement with diagonal terms only : %.02f'%(self._chisquare(n_data, n_tot, np.sqrt(np.diag(cov)))))
+              chistatonly, aab, aac = self._chisq_full_covariance(n_data,n_tot,CNP=True,STATONLY=True)
+              #chiarea, aab, aac = self._chisq_full_covariance(n_tot-lee_hist,n_tot,CNP=True,STATONLY=True,AREANORMED=True)
+              chicov, chinocov,dof = self._chisq_full_covariance(n_data,n_tot,CNP=True)#,USEFULLCOV=True)
             if "lee" in self.samples: chilee, chileenocov,dof = self._chisq_full_covariance(n_tot-lee_hist,n_tot,CNP=True)
             #self.stats['chisq full covariance'] = chicov
             #self.stats['chisq full covariance (diagonal only)'] = chinocov
-            self.stats['dof']            = dof
-            self.stats['chisqstatonly']  = chistatonly
-            #self.stats['chiarea']  = chiarea
-            self.stats['pvaluestatonly'] = (1 - scipy.stats.chi2.cdf(chistatonly,dof))
-            self.stats['chisqdiag']     = chinocov
-            self.stats['pvaluediag']     = (1 - scipy.stats.chi2.cdf(chinocov,dof))
-            #self.stats['parea']          = (1 - scipy.stats.chi2.cdf(chiarea,dof))
-            self.stats['chisq']          = chicov
-            #self.stats['chilee']          = chilee
-            self.stats['pvalue']         = (1 - scipy.stats.chi2.cdf(chicov,dof))
+
+            if(draw_data):
+              self.stats['dof']            = dof
+              self.stats['chisqstatonly']  = chistatonly
+              #self.stats['chiarea']  = chiarea
+              self.stats['pvaluestatonly'] = (1 - scipy.stats.chi2.cdf(chistatonly,dof))
+              self.stats['chisqdiag']     = chinocov
+              self.stats['pvaluediag']     = (1 - scipy.stats.chi2.cdf(chinocov,dof))
+              #self.stats['parea']          = (1 - scipy.stats.chi2.cdf(chiarea,dof))
+              self.stats['chisq']          = chicov
+              #self.stats['chilee']          = chilee
+              self.stats['pvalue']         = (1 - scipy.stats.chi2.cdf(chicov,dof))
             if "lee" in self.samples: self.stats['pvaluelee']         = (1 - scipy.stats.chi2.cdf(chilee,dof))
             #print ('chisq for data/mc agreement with full covariance is : %.02f. without cov : %.02f'%(chicov,chinocov))
 
