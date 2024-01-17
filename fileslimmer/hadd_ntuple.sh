@@ -9,7 +9,41 @@
 cleanup=true
 skip_prestage=false
 drop_weights=true
-prestage_fraction=0.97
+prestage_fraction=0.98
+
+########################################################################
+# Function to make a list of locations of staged files
+make_list_staged_files(){
+
+def=$1
+samweb list-files defname:$def > files_${def}.list
+
+# remove the old list of file locations
+rm file_locations_${def}.log
+
+while read -r line; do
+
+    loc=$(samweb locate-file $line)
+    if [ $(echo "$loc" | wc -l) -gt 1 ]; then
+        if [ -n $(echo "$loc" | grep "dcache") ]; then
+            loc=$(echo "$loc" | grep "dcache" | sed 's/dcache://g')
+        elif [ -n $(echo "$loc" | grep "enstore") ]; then
+            loc=$(echo "$loc" | grep "enstore" | sed 's/enstore://g')
+        fi
+    fi
+
+    loc=$(echo "${loc}" | sed 's/([^()]*)//g') 
+    loc=${loc}/
+    status=$(cat ${loc}".(get)(${line})(locality)")
+
+    if [[ "$status" == *"ONLINE"* ]]; then 
+        #echo "Found a file"
+        echo ${loc}${line} >> file_locations_${def}.log
+    fi
+
+done < files_${def}.list
+
+}
 
 ########################################################################
 
@@ -31,22 +65,9 @@ if [ $skip_prestage == false ]; then
     files_staged=0
     while (( $(echo "${files_staged} < ${files_to_stage}" | bc -l) )); do
         echo "Staged ${files_staged} of ${files}, target is ${files_to_stage}"
-        sleep 60m
-        files_staged=0 
-        while read -r line; do
-            loc=$(samweb locate-file $line)
-            loc=$(echo "${loc}" | sed 's/enstore://g' | sed 's/dcache://g')
-            loc=$(echo "${loc}" | sed 's/([^()]*)//g') 
-            loc=${loc}/
-            status=$(cat ${loc}".(get)(${line})(locality)")
-            if [[ "$status" == *"ONLINE"* ]]; then 
-                files_staged=$((files_staged+1))
-            fi
-            #echo "${files_staged} files staged"
-        done < files_${def}.list
-
-    #    files_staged=$(wc -l  prestage_${def}.log | awk '{ print $1 }')
-    #    files_staged=$((files_staged-5))
+        sleep 5m
+        make_list_staged_files $def
+        files_staged=$(wc -l file_locations_${def}.log | awk '{ print $1}')
     done
 
     sam_project=$(cat prestage_${def}.log | grep 'Started project' | awk '{ print $3}') 
@@ -70,24 +91,12 @@ fi
 #mv tmp_file_locations_${def}.log file_locations_${def}.log
 #sed -i 's/^dcache/d' file_locations_${def}.og
 
-# New method that checks if the files are prestaged
-
-while read -r line; do
-    loc=$(samweb locate-file $line)
-    loc=$(echo "${loc}" | sed 's/enstore://g' | sed 's/dcache://g')
-    loc=$(echo "${loc}" | sed 's/([^()]*)//g') 
-    loc=${loc}/
-    status=$(cat ${loc}".(get)(${line})(locality)")
-    
-    if [[ "$status" == *"ONLINE"* ]]; then 
-        #echo "Found a file"
-        echo ${loc}${line} >> file_locations_${def}.log
-    fi
-
-done < files_${def}.list
+if [ $skip_prestage == true ]; then
+    make_list_staged_files $def
+fi
 
 echo "Done making list of file locations"
- 
+
 ########################################################################
 # Convert the file list to xrootd format
 
