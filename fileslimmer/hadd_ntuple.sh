@@ -65,7 +65,7 @@ if [ $skip_prestage == false ]; then
     files_staged=0
     while (( $(echo "${files_staged} < ${files_to_stage}" | bc -l) )); do
         echo "Staged ${files_staged} of ${files}, target is ${files_to_stage}"
-        sleep 5m
+        sleep 60m
         make_list_staged_files $def
         files_staged=$(wc -l file_locations_${def}.log | awk '{ print $1}')
     done
