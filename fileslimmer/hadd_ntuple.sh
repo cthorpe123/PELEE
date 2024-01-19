@@ -6,8 +6,8 @@
 # Prestages files so best run inside nohup (or screen):
 # Usage: nohup ./hadd_ntuple.sh <samdef> >& hadd_<samdef>.log &
 
-cleanup=true
-skip_prestage=false
+cleanup=false
+skip_prestage=true
 drop_weights=true
 prestage_fraction=0.98
 
@@ -24,12 +24,13 @@ rm file_locations_${def}.log
 while read -r line; do
 
     loc=$(samweb locate-file $line)
-    if [ $(echo "$loc" | wc -l) -gt 1 ]; then
-        if [ -n $(echo "$loc" | grep "dcache") ]; then
-            loc=$(echo "$loc" | grep "dcache" | sed 's/dcache://g')
-        elif [ -n $(echo "$loc" | grep "enstore") ]; then
-            loc=$(echo "$loc" | grep "enstore" | sed 's/enstore://g')
-        fi
+
+    if [[ "$(echo "$loc" | grep "dcache")" == "dcache:"* ]]; then
+        #echo "File on dcache"
+        loc=$(echo "$loc" | grep "dcache" | sed 's/dcache://g')
+    elif [[ "$(echo "$loc" | grep "enstore")" == "enstore:"* ]]; then
+        #echo "File on enstore"
+        loc=$(echo "$loc" | grep "enstore" | sed 's/enstore://g')
     fi
 
     loc=$(echo "${loc}" | sed 's/([^()]*)//g') 
